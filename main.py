@@ -2,13 +2,12 @@ import pandas as pd
 from src.parser import load_benchmark
 from src.invariants import compute_invariant
 from src.graph6 import graph6
-from src.scoring import violation
+from src.scoring import base_violation
 from src.search import search
 
 
 def build_certificate(G, c):
     """Construit une preuve calculatoire propre"""
-
     return {
         "id": c.conjecture_id,
         "x_invariant": c.x_invariant,
@@ -22,37 +21,37 @@ def build_certificate(G, c):
 
 
 def main():
-
     conjectures = load_benchmark("benchmark/benchmark.xlsx")
-
     results = []
 
-    # 👉 on prend les 10 premières conjectures
+    # On prend les 10 premières conjectures
     for i, c in enumerate(conjectures[:10]):
-
         print(f"\n====================")
         print(f"Conjecture {i+1} | ID = {c.conjecture_id}")
         print(f"====================")
 
-        G, score = search(c, compute_invariant, time_limit=60)
+        # Temps plus long pour la conjecture difficile 1587
+        if c.conjecture_id == 1587:
+            time_limit = 120
+            print("  (Temps alloué : 120 secondes pour cette conjecture difficile)")
+        else:
+            time_limit = 60
+
+        G, score = search(c, compute_invariant, time_limit=time_limit)
 
         certificate = build_certificate(G, c)
 
-        # -----------------------------
-        # affichage résultat
-        # -----------------------------
-        print("Score =", score)
+        print(f"Score = {score:.6f}")
 
         if score > 0:
             print(">>> CONTRE-EXEMPLE TROUVÉ (CONJECTURE FAUSSE)")
         else:
             print(">>> PAS DE CONTRE-EXEMPLE TROUVÉ DANS LE TEMPS")
 
-        print("graph6 =", certificate["graph6"])
+        print(f"graph6 = {certificate['graph6']}")
+        print(f"n = {certificate['nodes']}, m = {certificate['edges']}")
+        print(f"{c.x_invariant} = {certificate['x_value']}, {c.y_invariant} = {certificate['y_value']}")
 
-        # -----------------------------
-        # stockage pour export Excel
-        # -----------------------------
         results.append({
             "id": c.conjecture_id,
             "x": c.x_invariant,
@@ -65,13 +64,19 @@ def main():
             "graph6": certificate["graph6"]
         })
 
-    # -----------------------------
-    # EXPORT EXCEL FINAL
-    # -----------------------------
+    # Export Excel final
     df = pd.DataFrame(results)
     df.to_excel("results_counterexamples.xlsx", index=False)
 
-    print("\n\n>>> EXPORT TERMINÉ : results_counterexamples.xlsx")
+    # Affichage du résumé
+    print("\n\n" + "="*60)
+    print("RÉSUMÉ DES RÉSULTATS")
+    print("="*60)
+    for r in results:
+        status = "✓" if r["score"] > 0 else "✗"
+        print(f"{status} ID {r['id']:4d} : score = {r['score']:8.4f}   (n={r['nodes']}, {r['x']}={r['x_value']}, {r['y']}={r['y_value']})")
+    print("="*60)
+    print(f"\n>>> EXPORT TERMINÉ : results_counterexamples.xlsx")
 
 
 if __name__ == "__main__":
