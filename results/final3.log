@@ -1,0 +1,308 @@
+=== START ===
+Loading benchmark from benchmark/benchmark.csv ...
+Loaded 100 conjectures.
+
+[1/100] ID=886  triangle_number <= f(maximum_degree)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=5.0  n=12  maximum_degree=6  triangle_number=40  phase=template  evals=4  t=0.09s
+
+[2/100] ID=980  clique_number <= f(average_degree)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=0.6405  n=137  average_degree=2.0583941605839415  clique_number=4  phase=search  evals=492  t=1.18s
+
+[3/100] ID=981  clique_number <= f(average_degree)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=0.5278  n=168  average_degree=2.0833333333333335  clique_number=4  phase=search  evals=594  t=7.53s
+
+[4/100] ID=1177  average_degree >= f(clique_number)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=0.8438  n=134  clique_number=5  average_degree=2.08955223880597  phase=search  evals=499  t=2.15s
+
+[5/100] ID=1178  average_degree >= f(clique_number)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=0.3695  n=131  clique_number=4  average_degree=2.030534351145038  phase=search  evals=499  t=1.67s
+
+[6/100] ID=1191  minimum_degree <= f(clique_number)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=9.5695  n=30  clique_number=2  minimum_degree=15  phase=template  evals=25  t=0.13s
+
+[7/100] ID=1466  independent_domination_number <= f(domination_number)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=4.7724  n=20  domination_number=2  independent_domination_number=10  phase=template  evals=1  t=0.06s
+
+[8/100] ID=1566  independence_number >= f(total_domination_number)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=1.0  n=41  total_domination_number=22  independence_number=20  phase=template  evals=27  t=0.19s
+
+[9/100] ID=1587  matching_number >= f(total_domination_number)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=0.6667  n=19  total_domination_number=12  matching_number=7  phase=template  evals=22  t=0.1s
+
+[10/100] ID=1588  matching_number >= f(total_domination_number)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=6.0  n=25  total_domination_number=17  matching_number=9  phase=template  evals=70  t=0.35s
+
+[11/100] ID=1600  vertex_cover_number >= f(total_domination_number)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=0.6667  n=19  total_domination_number=12  vertex_cover_number=7  phase=template  evals=8  t=0.07s
+
+[12/100] ID=1601  vertex_cover_number >= f(total_domination_number)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=1.0  n=13  total_domination_number=8  vertex_cover_number=5  phase=template  evals=45  t=0.2s
+
+[13/100] ID=1708  total_domination_number <= f(independence_number)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=1.0  n=33  independence_number=16  total_domination_number=18  phase=template  evals=32  t=0.12s
+
+[14/100] ID=1880  independent_domination_number <= f(vertex_cover_number)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=16.0  n=23  vertex_cover_number=2  independent_domination_number=21  phase=template  evals=12  t=0.11s
+
+[15/100] ID=1891  total_domination_number <= f(vertex_cover_number)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=0.5  n=16  vertex_cover_number=6  total_domination_number=10  phase=template  evals=68  t=0.22s
+
+[16/100] ID=2041  matching_number >= f(independent_domination_number)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=0.25  n=16  independent_domination_number=6  matching_number=2  phase=template  evals=5  t=0.11s
+
+[17/100] ID=2051  vertex_cover_number >= f(independent_domination_number)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=1.0  n=18  independent_domination_number=9  vertex_cover_number=2  phase=template  evals=7  t=0.07s
+
+[18/100] ID=2117  independent_domination_number <= f(matching_number)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=0.7724  n=13  matching_number=2  independent_domination_number=6  phase=template  evals=10  t=0.07s
+
+[19/100] ID=2120  total_domination_number <= f(matching_number)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=1.5  n=22  matching_number=8  total_domination_number=14  phase=template  evals=18  t=0.12s
+
+[20/100] ID=2121  total_domination_number <= f(matching_number)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=6.0  n=25  matching_number=9  total_domination_number=17  phase=template  evals=7  t=0.07s
+
+[21/100] ID=4247  independent_domination_number <= f(diameter)  classes=['connected', 'tree']
+  -> COUNTER-EXAMPLE  v=17.0  n=24  diameter=3  independent_domination_number=22  phase=template  evals=3  t=0.01s
+
+[22/100] ID=4668  independent_domination_number <= f(vertex_cover_number)  classes=['connected', 'tree']
+  -> COUNTER-EXAMPLE  v=0.7724  n=12  vertex_cover_number=4  independent_domination_number=6  phase=template  evals=2  t=0.01s
+
+[23/100] ID=4712  diameter >= f(independent_domination_number)  classes=['connected', 'tree']
+  -> COUNTER-EXAMPLE  v=1.25  n=22  independent_domination_number=10  diameter=3  phase=template  evals=3  t=0.01s
+
+[24/100] ID=5952  independence_number <= f(diameter)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=1.0  n=25  diameter=2  independence_number=5  phase=template  evals=34  t=0.26s
+
+[25/100] ID=5994  domination_number <= f(radius)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.4867  n=16  radius=4  domination_number=4  phase=template  evals=4  t=0.16s
+
+[26/100] ID=5996  total_domination_number <= f(radius)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.8867  n=45  radius=2  total_domination_number=6  phase=template  evals=40  t=0.31s
+
+[27/100] ID=5998  independence_number <= f(radius)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.4867  n=23  radius=4  independence_number=6  phase=search  evals=143  t=1.06s
+
+[28/100] ID=6000  independent_domination_number <= f(radius)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.4867  n=12  radius=4  independent_domination_number=4  phase=template  evals=33  t=0.35s
+
+[29/100] ID=6179  average_degree >= f(maximum_degree)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.0449  n=104  maximum_degree=4  average_degree=2.0384615384615383  phase=search  evals=105  t=0.78s
+
+[30/100] ID=6180  average_degree >= f(maximum_degree)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.1622  n=100  maximum_degree=4  average_degree=2.06  phase=search  evals=106  t=0.81s
+
+[31/100] ID=6181  average_degree >= f(maximum_degree)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.6218  n=105  maximum_degree=5  average_degree=2.1142857142857143  phase=search  evals=111  t=0.76s
+
+[32/100] ID=6182  average_degree >= f(maximum_degree)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.5828  n=103  maximum_degree=5  average_degree=2.058252427184466  phase=search  evals=105  t=0.78s
+
+[33/100] ID=6267  maximum_degree <= f(average_degree)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.9748  n=102  average_degree=2.0980392156862746  maximum_degree=5  phase=search  evals=114  t=1.01s
+
+[34/100] ID=6268  maximum_degree <= f(average_degree)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.4563  n=103  average_degree=2.0194174757281553  maximum_degree=4  phase=search  evals=110  t=0.93s
+
+[35/100] ID=6269  maximum_degree <= f(average_degree)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.3233  n=107  average_degree=2.05607476635514  maximum_degree=4  phase=search  evals=109  t=0.84s
+
+[36/100] ID=6272  clique_number <= f(average_degree)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.6667  n=108  average_degree=2.074074074074074  clique_number=4  phase=search  evals=113  t=1.03s
+
+[37/100] ID=6278  clique_number <= f(average_degree)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=1.8878  n=20  average_degree=7.4  clique_number=12  phase=template  evals=9  t=0.23s
+
+[38/100] ID=6352  average_degree >= f(clique_number)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.3312  n=106  clique_number=4  average_degree=2.1132075471698113  phase=search  evals=111  t=0.94s
+
+[39/100] ID=6574  independence_number <= f(total_domination_number)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=1.0  n=11  total_domination_number=4  independence_number=6  phase=search  evals=129  t=0.81s
+
+[40/100] ID=6582  matching_number >= f(total_domination_number)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=1.0  n=73  total_domination_number=38  matching_number=36  phase=search  evals=107  t=0.91s
+
+[41/100] ID=6903  total_domination_number <= f(matching_number)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=1.0  n=73  matching_number=36  total_domination_number=38  phase=search  evals=118  t=0.92s
+
+[42/100] ID=688  proximity >= f(density)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=0.0937  n=16  density=0.425  proximity=0.17857142857142858  phase=template  evals=250  t=0.72s
+
+[43/100] ID=713  remoteness >= f(density)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=0.0144  n=16  density=0.2916666666666667  remoteness=0.3409090909090909  phase=template  evals=141  t=0.41s
+
+[44/100] ID=737  second_smallest_laplace_eigenvalue >= f(density)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=0.04  n=32  density=0.2842741935483871  second_smallest_laplace_eigenvalue=0.016761919985857077  phase=template  evals=2  t=0.19s
+
+[45/100] ID=1021  triangle_number >= f(average_degree)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=225.0  n=30  average_degree=15.0  triangle_number=0  phase=template  evals=6  t=0.06s
+
+[46/100] ID=1337  average_degree <= f(triangle_number)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=0.8333  n=12  triangle_number=0  average_degree=5.833333333333333  phase=template  evals=13  t=0.1s
+
+[47/100] ID=1591  proximity >= f(total_domination_number)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=0.0232  n=20  total_domination_number=3  proximity=0.2714285714285714  phase=template  evals=7  t=0.09s
+
+[48/100] ID=1729  proximity >= f(independence_number)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=0.0614  n=16  independence_number=4  proximity=0.17857142857142858  phase=template  evals=176  t=0.48s
+
+[49/100] ID=1793  second_smallest_laplace_eigenvalue >= f(independence_number)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=0.0594  n=18  independence_number=3  second_smallest_laplace_eigenvalue=0.1270166537925834  phase=template  evals=1  t=0.08s
+
+[50/100] ID=1892  total_domination_number <= f(vertex_cover_number)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=1.0  n=13  vertex_cover_number=5  total_domination_number=8  phase=template  evals=28  t=0.12s
+
+[51/100] ID=1917  proximity >= f(vertex_cover_number)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=0.0183  n=35  vertex_cover_number=3  proximity=0.2125  phase=template  evals=19  t=0.12s
+
+[52/100] ID=1919  proximity >= f(vertex_cover_number)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=0.004  n=23  vertex_cover_number=3  proximity=0.2268041237113402  phase=template  evals=5  t=0.07s
+
+[53/100] ID=2129  proximity >= f(matching_number)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=0.004  n=23  matching_number=3  proximity=0.2268041237113402  phase=template  evals=62  t=0.28s
+
+[54/100] ID=2131  proximity >= f(matching_number)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=0.0285  n=19  matching_number=3  proximity=0.20224719101123595  phase=template  evals=6  t=0.12s
+
+[55/100] ID=2252  total_domination_number <= f(randic_index)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=0.827  n=22  randic_index=10.320576161692804  total_domination_number=14  phase=template  evals=80  t=0.19s
+
+[56/100] ID=2882  independent_domination_number <= f(second_zagreb_index)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=4.25  n=30  second_zagreb_index=112  independent_domination_number=15  phase=template  evals=6  t=0.1s
+
+[57/100] ID=3144  total_domination_number >= f(proximity)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=0.1498  n=19  proximity=0.20224719101123595  total_domination_number=4  phase=template  evals=7  t=0.12s
+
+[58/100] ID=3157  matching_number >= f(proximity)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=1.7471  n=21  proximity=0.15873015873015872  matching_number=4  phase=template  evals=4  t=0.09s
+
+[59/100] ID=3191  vertex_cover_number >= f(proximity)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=0.0833  n=19  proximity=0.225  vertex_cover_number=3  phase=template  evals=14  t=0.13s
+
+[60/100] ID=3193  vertex_cover_number >= f(proximity)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=1.0287  n=20  proximity=0.17757009345794392  vertex_cover_number=4  phase=template  evals=25  t=0.3s
+
+[61/100] ID=3368  matching_number >= f(remoteness)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=0.046  n=19  remoteness=0.3829787234042553  matching_number=3  phase=template  evals=3  t=0.08s
+
+[62/100] ID=3384  vertex_cover_number >= f(remoteness)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=0.637  n=17  remoteness=0.26666666666666666  vertex_cover_number=5  phase=template  evals=22  t=0.16s
+
+[63/100] ID=3550  triangle_number <= f(largest_eigenvalue)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=1.5274  n=16  largest_eigenvalue=5.035842306064364  triangle_number=40  phase=template  evals=267  t=0.68s
+
+[64/100] ID=3961  average_degree <= f(second_smallest_laplace_eigenvalue)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=9.8624  n=26  second_smallest_laplace_eigenvalue=1.0000000000000036  average_degree=21.384615384615383  phase=template  evals=64  t=0.24s
+
+[65/100] ID=3979  independence_number >= f(second_smallest_laplace_eigenvalue)  classes=['connected']
+  -> COUNTER-EXAMPLE  v=0.7704  n=11  second_smallest_laplace_eigenvalue=0.10804555933608426  independence_number=4  phase=template  evals=1  t=0.09s
+
+[66/100] ID=4288  second_smallest_laplace_eigenvalue >= f(diameter)  classes=['connected', 'tree']
+  -> COUNTER-EXAMPLE  v=0.0344  n=26  diameter=3  second_smallest_laplace_eigenvalue=0.1345400686718812  phase=template  evals=2  t=0.01s
+
+[67/100] ID=5381  remoteness >= f(proximity)  classes=['connected', 'tree']
+  -> COUNTER-EXAMPLE  v=0.0086  n=80  proximity=0.025  remoteness=0.049375  phase=template  evals=25  t=0.08s
+
+[68/100] ID=5421  domination_number >= f(remoteness)  classes=['connected', 'tree']
+  -> COUNTER-EXAMPLE  v=0.1748  n=17  remoteness=0.3137254901960784  domination_number=3  phase=template  evals=47  t=0.12s
+
+[69/100] ID=5968  proximity >= f(diameter)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.0229  n=10  diameter=5  proximity=0.2571428571428571  phase=template  evals=5  t=0.24s
+
+[70/100] ID=5983  second_smallest_laplace_eigenvalue >= f(diameter)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.0346  n=20  diameter=9  second_smallest_laplace_eigenvalue=0.05082702666298446  phase=template  evals=2  t=0.16s
+
+[71/100] ID=6011  remoteness >= f(radius)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.0504  n=16  radius=4  remoteness=0.3409090909090909  phase=template  evals=79  t=1.14s
+
+[72/100] ID=6013  remoteness >= f(radius)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.0697  n=26  radius=5  remoteness=0.25773195876288657  phase=template  evals=36  t=0.25s
+
+[73/100] ID=6020  second_smallest_laplace_eigenvalue >= f(radius)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.0287  n=26  radius=5  second_smallest_laplace_eigenvalue=0.026026400832665286  phase=template  evals=3  t=0.24s
+
+[74/100] ID=6124  remoteness <= f(density)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.0144  n=12  density=0.42424242424242425  remoteness=0.8461538461538461  phase=template  evals=2  t=0.19s
+
+[75/100] ID=6270  maximum_degree <= f(average_degree)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.8941  n=22  average_degree=7.0  maximum_degree=13  phase=search  evals=102  t=0.79s
+
+[76/100] ID=6351  maximum_degree <= f(clique_number)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=5.791  n=45  clique_number=9  maximum_degree=16  phase=template  evals=31  t=0.35s
+
+[77/100] ID=6466  largest_eigenvalue <= f(triangle_number)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.0363  n=12  triangle_number=114  largest_eigenvalue=8.90854711301709  phase=search  evals=126  t=1.1s
+
+[78/100] ID=6472  largest_eigenvalue <= f(triangle_number)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.0104  n=15  triangle_number=114  largest_eigenvalue=8.901558124518235  phase=search  evals=124  t=1.18s
+
+[79/100] ID=6617  second_smallest_laplace_eigenvalue >= f(total_domination_number)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.0401  n=12  total_domination_number=2  second_smallest_laplace_eigenvalue=0.2583426132260588  phase=template  evals=11  t=0.31s
+
+[80/100] ID=7205  second_zagreb_index >= f(first_zagreb_index)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=115.4615  n=50  first_zagreb_index=194  second_zagreb_index=192  phase=template  evals=6  t=0.34s
+
+[81/100] ID=7206  second_zagreb_index >= f(first_zagreb_index)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=367.3333  n=15  first_zagreb_index=540  second_zagreb_index=1620  phase=template  evals=5  t=0.3s
+
+[82/100] ID=7212  second_zagreb_index >= f(first_zagreb_index)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=26.5556  n=50  first_zagreb_index=194  second_zagreb_index=192  phase=template  evals=1  t=0.24s
+
+[83/100] ID=7213  second_zagreb_index >= f(first_zagreb_index)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=32.7333  n=50  first_zagreb_index=194  second_zagreb_index=192  phase=template  evals=4  t=0.23s
+
+[84/100] ID=7565  triangle_number >= f(largest_eigenvalue)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.3191  n=15  largest_eigenvalue=10.040350277858627  triangle_number=158  phase=search  evals=122  t=1.25s
+
+[85/100] ID=7566  triangle_number >= f(largest_eigenvalue)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=2.3658  n=14  largest_eigenvalue=9.503405180301666  triangle_number=137  phase=search  evals=129  t=1.15s
+
+[86/100] ID=7694  proximity >= f(largest_distance_eigenvalue)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.0019  n=9  largest_distance_eigenvalue=25.982737621388793  proximity=0.22857142857142856  phase=search  evals=416  t=2.38s
+
+[87/100] ID=7695  proximity >= f(largest_distance_eigenvalue)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.0005  n=11  largest_distance_eigenvalue=36.657528058872046  proximity=0.19230769230769232  phase=search  evals=297  t=2.3s
+
+[88/100] ID=7703  second_smallest_laplace_eigenvalue >= f(largest_distance_eigenvalue)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.0013  n=10  largest_distance_eigenvalue=32.50980942989506  second_smallest_laplace_eigenvalue=0.10288001874367984  phase=search  evals=294  t=1.2s
+
+[89/100] ID=7711  diameter >= f(second_smallest_laplace_eigenvalue)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.5874  n=12  second_smallest_laplace_eigenvalue=0.17157287525380985  diameter=5  phase=template  evals=2  t=0.19s
+
+[90/100] ID=7712  diameter >= f(second_smallest_laplace_eigenvalue)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.6683  n=12  second_smallest_laplace_eigenvalue=0.2583426132260588  diameter=3  phase=template  evals=16  t=0.25s
+
+[91/100] ID=7713  diameter >= f(second_smallest_laplace_eigenvalue)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.4397  n=16  second_smallest_laplace_eigenvalue=0.05940738939999008  diameter=7  phase=template  evals=8  t=0.18s
+
+[92/100] ID=7718  radius >= f(second_smallest_laplace_eigenvalue)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.3135  n=10  second_smallest_laplace_eigenvalue=0.1442274933640112  radius=3  phase=template  evals=2  t=0.19s
+
+[93/100] ID=7719  radius >= f(second_smallest_laplace_eigenvalue)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=1.3963  n=13  second_smallest_laplace_eigenvalue=0.08849668592497498  radius=3  phase=template  evals=5  t=0.18s
+
+[94/100] ID=7732  maximum_degree <= f(second_smallest_laplace_eigenvalue)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=6.8425  n=21  second_smallest_laplace_eigenvalue=1.0  maximum_degree=20  phase=template  evals=31  t=0.29s
+
+[95/100] ID=7734  average_degree <= f(second_smallest_laplace_eigenvalue)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=2.9358  n=17  second_smallest_laplace_eigenvalue=1.0  average_degree=14.235294117647058  phase=template  evals=55  t=0.45s
+
+[96/100] ID=7743  domination_number >= f(second_smallest_laplace_eigenvalue)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.6776  n=16  second_smallest_laplace_eigenvalue=0.05940738939999008  domination_number=3  phase=template  evals=10  t=0.25s
+
+[97/100] ID=7753  total_domination_number >= f(second_smallest_laplace_eigenvalue)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.5485  n=12  second_smallest_laplace_eigenvalue=0.2583426132260588  total_domination_number=2  phase=template  evals=9  t=0.17s
+
+[98/100] ID=7773  independent_domination_number >= f(second_smallest_laplace_eigenvalue)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.1181  n=10  second_smallest_laplace_eigenvalue=0.1774503305485403  independent_domination_number=2  phase=template  evals=11  t=0.2s
+
+[99/100] ID=7811  largest_eigenvalue <= f(second_smallest_laplace_eigenvalue)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=2.8113  n=17  second_smallest_laplace_eigenvalue=1.0  largest_eigenvalue=15.004181831831087  phase=template  evals=71  t=0.54s
+
+[100/100] ID=7813  largest_distance_eigenvalue >= f(second_smallest_laplace_eigenvalue)  classes=['claw_free', 'connected']
+  -> COUNTER-EXAMPLE  v=0.383  n=10  second_smallest_laplace_eigenvalue=0.10288001874368032  largest_distance_eigenvalue=32.50980942989505  phase=search  evals=254  t=1.11s
+
+======================================================================
+Refuted 100/100 conjectures.
+Total cost: 52.17
+Results -> results_counterexamples.csv

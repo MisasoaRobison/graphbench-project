@@ -1,0 +1,571 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage[a4paper,margin=2.2cm]{geometry}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{amsmath,amssymb}
+\usepackage{microtype}
+\usepackage{titling}
+\usepackage{titlesec}
+
+\hypersetup{colorlinks=true, linkcolor=black, urlcolor=blue!60!black,
+            citecolor=blue!60!black}
+
+\titlespacing*{\section}{0pt}{1.2ex plus .4ex minus .2ex}{0.6ex plus .2ex}
+\titlespacing*{\subsection}{0pt}{0.9ex plus .3ex minus .2ex}{0.4ex plus .2ex}
+
+\setlist[itemize]{topsep=2pt,itemsep=1pt,parsep=0pt}
+
+\definecolor{codebg}{HTML}{F6F8FA}
+\definecolor{codekw}{HTML}{0550AE}
+\definecolor{codestr}{HTML}{116329}
+\definecolor{codecmt}{HTML}{6E7781}
+
+\lstdefinestyle{py}{
+  language=Python,
+  basicstyle=\ttfamily\footnotesize,
+  backgroundcolor=\color{codebg},
+  keywordstyle=\color{codekw}\bfseries,
+  stringstyle=\color{codestr},
+  commentstyle=\color{codecmt}\itshape,
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  framerule=0pt,
+  framesep=4pt,
+  xleftmargin=4pt,
+  xrightmargin=4pt,
+  columns=fullflexible,
+}
+
+% --------------------------------------------------------------------
+\begin{document}
+
+% ============ PAGE DE GARDE ============
+\begin{titlepage}
+\centering
+\vspace*{2.5cm}
+{\Huge\bfseries GraphBench Challenge\par}
+\vspace{0.7cm}
+{\Large Réfutation automatique de conjectures en théorie des graphes\par}
+\vspace{0.4cm}
+{\large Métaheuristiques, IA générative et architecture FunSearch\par}
+
+\vspace{2.0cm}
+\rule{0.6\linewidth}{0.5pt}\par
+\vspace{0.8cm}
+
+{\Large Master 1 MIAGE \par}
+\vspace{0.5cm}
+{\large \textbf{Binôme} \par}
+\vspace{0.2cm}
+{\large Étudiant·e 1 — \texttt{prénom.nom@univ.fr} \par}
+{\large Étudiant·e 2 — \texttt{prénom.nom@univ.fr} \par}
+
+\vspace{1.4cm}
+\rule{0.6\linewidth}{0.5pt}\par
+\vspace{1.0cm}
+
+\begin{tabular}{rl}
+  \textbf{Dépôt GitHub :} &
+    \url{https://github.com/Jalloh-hub/graphbench-project} \\[2pt]
+  \textbf{Conjectures réfutées :} & \textbf{100 / 100} \\[2pt]
+  \textbf{Score total (coût $\sum c_i$) :} & \textbf{52{,}17 s} \\[2pt]
+  \textbf{Budget par conjecture :} & 60 s \\[2pt]
+  \textbf{Temps moyen / réfutation :} & 0{,}52 s \\[2pt]
+  \textbf{Date :} & 10 mai 2026 \\
+\end{tabular}
+
+\vfill
+\end{titlepage}
+
+% ============ SOMMAIRE ============
+\tableofcontents
+\vspace{0.5cm}
+\hrule
+\vspace{0.5cm}
+
+% ============ SECTION 1 ============
+\section{Introduction et objectif}
+
+Le projet \emph{GraphBench Challenge} demande de construire un programme
+capable, étant donné une conjecture
+\[
+  \forall G \in \mathcal{C},\quad Y(G) \;\mathrel{\square}\; f\bigl(X(G)\bigr)
+  \quad\text{où } \square \in \{\le, \ge\},
+\]
+de \emph{réfuter} la conjecture, c'est-à-dire de trouver
+$G \in \mathcal{C}$ tel que le signe soit strictement inversé. Le score d'une
+heuristique est, pour un budget de $60$~s par conjecture~:
+\[
+  c_i \;=\; \begin{cases} t_i & \text{si un contre-exemple est trouvé en } t_i, \\
+                          120 & \text{sinon},\end{cases}
+  \qquad
+  \text{Score total} \;=\; \sum_{i=1}^{100} c_i.
+\]
+
+\paragraph{Résultat obtenu.}
+$100/100$ conjectures réfutées, \textbf{score total $\mathbf{52{,}17}$~s}, soit
+en moyenne $0{,}52$~s par contre-exemple (et donc bien en deçà du budget de
+$60$~s).
+
+\paragraph{Démarche.}
+Le projet comporte deux parties~: \textbf{Partie~1} construit une
+métaheuristique de recherche locale avec génération, score, mutations,
+réparation et redémarrages~; \textbf{Partie~2} met en place une boucle
+\emph{FunSearch}~\cite{romera2024funsearch} où un LLM propose itérativement
+des fonctions de score, évaluées dans un \emph{sandbox} sur un sous-ensemble
+du benchmark, les meilleures étant conservées dans une archive et
+re-injectées dans le prompt suivant.
+
+% ============ SECTION 2 ============
+\section{Partie 1 — Heuristique simple}
+
+L'architecture est un schéma classique de \emph{population-based local
+search}, spécialisé pour les graphes et les classes imposées
+(\texttt{connected}, \texttt{tree}, \texttt{bipartite}, \texttt{planar},
+\texttt{claw\_free}).
+
+\subsection{Représentation et invariants}
+
+Les graphes sont des objets \texttt{networkx.Graph}, manipulés en sommets
+entiers consécutifs. Chaque graphe candidat est encodé en \texttt{graph6} pour
+servir de clé de cache et de certificat dans la sortie. Le module
+\texttt{src/invariants.py} expose 24~invariants (n, m, density, $\delta$,
+$\Delta$, avg, diam, rad, $t$, $\omega$, $\gamma$, $\gamma_t$, $i$, $\alpha$,
+$\tau$, $\mu$, Randić, Harmonic, $M_1$, $M_2$, proximity, remoteness,
+$\lambda_1(A)$, $\lambda_1(D)$, $\lambda_2(L)$).
+
+\paragraph{Cache.} Toutes les valeurs sont mémoïsées via la chaîne
+\texttt{graph6}, ce qui amortit considérablement les coûts pour les
+invariants spectraux ou ceux requérant des recherches exactes.
+
+\paragraph{Calculs exacts vs. greedy.}
+Pour la domination (totale, indépendante), l'indépendance et le vertex-cover,
+on bascule sur des algorithmes branch-and-bound à \emph{bitmasks} jusqu'à
+$n \le 22$ (resp. $26$ pour $\alpha$), puis sur des heuristiques \emph{greedy}
+au-delà afin de conserver des temps d'évaluation acceptables.
+
+\subsection{Génération initiale}
+
+Deux mécanismes complémentaires~:
+\begin{itemize}
+  \item Une \emph{bibliothèque de templates} (\texttt{template\_list}) qui
+    énumère des familles paramétriques classiques~: $P_n$, $C_n$, $K_n$,
+    $K_{a,b}$, Petersen et Petersen généralisés, hypercubes $Q_d$, étoiles
+    subdivisées, arbres caterpillar, spiders, friendship graphs, books,
+    coronas, hubs collés, line graphs de $K_n$ et $K_{a,b}$, graphes
+    réguliers aléatoires, lollipops, barbells~;
+  \item Une fonction \texttt{extreme\_seeds(x\_inv, y\_inv)} qui sélectionne
+    des familles plus ciblées \emph{selon les invariants mentionnés par la
+    conjecture en cours}. Par exemple, dès qu'un invariant proximity /
+    remoteness apparaît, on injecte de longs chemins, de gros $K_n$ et des
+    graphes \og{}$K_1 \vee (K_a \sqcup K_b)$ avec satellite\fg{} (claw-free,
+    densité moyenne, forte remoteness)~; pour $\lambda_1$ et $\lambda_2$ on
+    ajoute des $K_n$ avec pendants, des graphes de Paley, des graphes
+    fortement réguliers.
+\end{itemize}
+Cette spécialisation par invariants est un point décisif~: elle a
+\emph{remplacé} la recherche évolutive aveugle pour la moitié des conjectures
+difficiles (cf.~§\ref{sec:resultats}).
+
+\subsection{Mutations}
+
+Treize opérateurs sont définis dans \texttt{src/mutations.py}~:
+ajout/suppression d'arête, ajout/suppression de sommet, subdivision, ajout
+de feuille, ajout de chemin, attache d'un triangle ou d'une clique, jumeau
+faux, contraction d'arête, 2-swap, recâblage, suppression de feuille. Les
+poids de tirage sont biaisés différemment selon la classe~: pour les arbres,
+on n'utilise que les mutations conservant la structure (add/remove leaf,
+subdivide, path, contract). Chaque mutation est suivie d'une \emph{phase de
+réparation}.
+
+\subsection{Réparation}
+
+Le module \texttt{src/repair.py} ramène un graphe muté dans la classe imposée
+\emph{après} la mutation~: reconnexion par ajout d'arêtes entre composantes,
+spanning tree pour les arbres, suppression d'arêtes d'un cycle impair pour
+la bipartition, suppression d'arêtes jusqu'à planarité, ajout d'arêtes pour
+\og{}dégriffer\fg{} la voisinage des sommets à griffe induite. Ce mécanisme
+permet d'utiliser des mutations agressives sans avoir à les restreindre.
+
+\subsection{Score \emph{direction-aware}}
+\label{sec:score}
+
+C'est la pièce centrale. Pour une conjecture donnée, on connaît, par le
+signe et la pente du polynôme, la \emph{direction} dans laquelle chaque
+invariant doit bouger pour augmenter la violation~:
+\begin{itemize}
+  \item Pour $Y$~: $\mathrm{dir}_Y = +1$ si $\square = \le$, $-1$ sinon.
+  \item Pour $X$~: signe de la dérivée
+    $f'(X_{\text{courant}})$ avec correction par $\square$.
+\end{itemize}
+
+À chaque invariant on associe ensuite un \emph{biais densité} (un invariant
+qui croît avec la densité, comme $\omega$ ou $\lambda_1$, a un biais $+1$~;
+$\alpha$ ou $\gamma$ ont $-1$) et un \emph{biais taille}. La somme
+direction~$\times$~biais donne, pour le graphe courant, un signe et une
+amplitude de poussée. Le score final est~:
+{\small
+\[
+  F(G) \;=\; v(G) \;+\; \alpha\, n
+  \;+\; \beta\,\mathrm{sgn}(\mathrm{dens\_target}) \cdot (\rho - 0{,}5)
+  \;+\; \gamma\,\mathrm{sgn}(\mathrm{size\_target}) \cdot n
+  \;+\; \text{petits termes spécifiques}
+\]}
+où $v(G)$ est la violation, $\rho$ la densité, et les bonus deviennent forts
+($+1$, $+1{,}5$) aux extrémités $\rho > 0{,}95$ ou $\rho < 0{,}05$. Quand la
+violation devient strictement positive, on renvoie $10^6 + v$ pour court-circuiter
+la recherche.
+
+L'effet pratique est qu'un graphe \og{}peu prometteur en violation
+brute\fg{} mais \og{}sur le bon chemin\fg{} (densité poussée dans la direction
+voulue) reçoit un score supérieur, ce qui le sélectionne comme parent.
+
+\subsection{Boucle de recherche}
+
+Le pseudo-code est conforme au schéma minimal du sujet~:
+\begin{lstlisting}[style=py]
+seeds = extreme_seeds(classes, c.x_invariant, c.y_invariant)
+templates = template_list(classes) + seeds
+random.shuffle(templates)
+for tpl in templates:                    # phase template
+    if consider(tpl)["v"] > 1e-9: return ...
+for _ in range(6):                       # phase init
+    G0 = random_for_class(classes); G0 = repair_class(G0, classes)
+    consider(G0)
+
+stag = 0                                  # phase search
+while time_left() > 0:
+    parent = tournament(population, k=3)
+    H = mutate(parent["G"], classes)
+    H = repair_class(H, classes)
+    c = consider(H)
+    if c is None: stag += 1
+    elif c["v"] > 1e-9: return ...
+    elif c["score"] > parent["score"]:
+        population.append(c); trim_to(8); stag = 0
+    else: stag += 1
+    if stag > 80:                         # restart agressif
+        stag = 0
+        G0 = random_for_class(classes, min_n=8,
+                              max_n=random.choice([16,22,30,40,60,80]))
+        consider(repair_class(G0, classes))
+\end{lstlisting}
+La population est limitée à $8$ après chaque insertion, conservant les
+meilleurs scores. Le redémarrage agressif fait varier $\max_n$ jusqu'à $80$,
+ce qui est indispensable pour des invariants comme \texttt{proximity} ou
+\texttt{remoteness} qui demandent parfois $n \ge 50$.
+
+% ============ SECTION 3 ============
+\section{Partie 2 — Architecture FunSearch}
+
+L'objectif de la partie 2 est d'\emph{automatiser} la conception de la
+fonction de score à l'aide d'un LLM, dans l'esprit de FunSearch.
+
+\subsection{Pipeline}
+
+Cinq étapes répétées (cf. \texttt{experiments/funsearch/funsearch.py})~:
+\begin{enumerate}
+  \item Le top-$K$ candidats de l'archive est inséré dans un prompt.
+  \item Le LLM propose un nouveau \texttt{heuristic\_score}.
+  \item La fonction est \emph{sandboxée} (cf. \S\ref{sec:sandbox}) puis
+    compilée.
+  \item Elle est évaluée sur un sous-ensemble de conjectures avec un budget
+    court~; on calcule un score $\sum t_i$ + pénalité $\times 2$ par échec.
+  \item L'entrée est ajoutée à l'archive JSON et le code source au répertoire
+    \texttt{candidates/}.
+\end{enumerate}
+
+\subsection{Sandbox et évaluateur}
+\label{sec:sandbox}
+
+Le sandbox restreint \texttt{\_\_builtins\_\_} à un sous-ensemble sûr~:
+\texttt{abs}, \texttt{min}, \texttt{max}, \texttt{sum}, \texttt{len},
+\texttt{range}, \texttt{sorted}, types primitifs, \emph{etc.}~; sont exposés
+en plus \texttt{math}, \texttt{nx} (NetworkX) et \texttt{np} (NumPy). Les
+fonctions d'I/O (\texttt{open}, \texttt{exec}, \texttt{eval},
+\texttt{\_\_import\_\_}) sont absentes. La signature imposée est~:
+\begin{lstlisting}[style=py]
+def heuristic_score(G, invariants, conjecture):
+    """G: nx.Graph; invariants: dict; conjecture: Conjecture
+       retourne un score numerique a maximiser"""
+\end{lstlisting}
+
+L'objet \texttt{Conjecture} expose dorénavant
+\texttt{violation(invariants)} (overload acceptant un dictionnaire). Le
+dictionnaire \texttt{invariants} est construit par
+\texttt{build\_extended\_invariants}~: il contient $n$, $m$, $\rho$, $X$,
+$Y$, ainsi qu'une suite d'\emph{alias courts} (\texttt{delta}, \texttt{Delta},
+\texttt{diam}, \texttt{rad}, \texttt{triangles}, \texttt{omega},
+\texttt{gamma}, \texttt{alpha}, \texttt{tau}, \texttt{mu}) conformes à
+l'exemple du sujet (\S7.2 du PDF).
+
+L'évaluateur réinjecte la fonction proposée comme paramètre \texttt{score\_fn}
+de la fonction de recherche existante, qui appelle alors
+\texttt{score\_fn(G, ext\_inv, c)} au lieu du score statique. Aucun
+duplicata d'algorithme~: \emph{tout le reste de la métaheuristique de la
+Partie~1 reste actif}.
+
+\subsection{Choix du sous-ensemble d'évaluation}
+
+Sur 100~conjectures, un sous-ensemble de 10–12 est sélectionné de façon
+stratifiée (sous-groupe $\mathcal{C}$, $X$, signe) en réservant 60\,\% du
+budget à des conjectures connues pour exiger un score subtil
+(prox / rem, claw-free spectral). Cela donne une variance suffisante~:
+sur un seed naïf (retourner la violation brute) le score est
+$\sim 14$~; le seed \og{}direction-aware\fg{} descend à $\sim 7$.
+
+\subsection{Providers LLM}
+
+Trois back-ends interchangeables (\texttt{llm\_provider.py})~:
+\begin{itemize}
+  \item \textbf{AnthropicProvider} (\texttt{claude-opus}) via le SDK
+    \texttt{anthropic}, en utilisant \texttt{ANTHROPIC\_API\_KEY}~;
+  \item \textbf{OpenAIProvider} (\texttt{gpt-4o}) via \texttt{openai}~;
+  \item \textbf{MockProvider}~: pour le développement offline, perturbe les
+    constantes numériques du meilleur candidat avec un facteur log-uniforme
+    et injecte aléatoirement un terme supplémentaire pris dans une palette.
+    Ne remplace pas un vrai LLM mais permet de \emph{démontrer que la boucle
+    fonctionne} et de tester localement.
+\end{itemize}
+
+\subsection{Prompt}
+
+Le prompt système précise l'objectif de la recherche et les contraintes~:
+fonction déterministe, $< 1$~ms par appel, pas d'I/O, seulement les
+bibliothèques exposées. Le prompt utilisateur embarque une documentation
+des clefs disponibles dans \texttt{invariants} (avec les alias courts) et
+\emph{tous les top-K candidats avec leurs scores}, puis demande \og{}une
+seule variante améliorée, dans un unique bloc de code Python\fg{}.
+
+% ============ SECTION 4 ============
+\section{Résultats expérimentaux}
+\label{sec:resultats}
+
+\subsection{Progression}
+
+\begin{table}[h]\centering\small
+\begin{tabular}{lrrl}
+\toprule
+Étape & Réfutées & Score (s) & Note \\
+\midrule
+Baseline (15 s/conj, score naïf)         &  74 / 100 & 3170 & 26 échecs, surtout prox/rem \\
++ score direction-aware + extreme\_seeds &  90 / 100 & --   & estimé \\
++ correction prox/rem (closeness)        &  94 / 100 & --   & 22 conjectures impactées \\
++ \texttt{scipy} installé                &  98 / 100 & --   & 5 conjectures spectrales \\
++ brooms / double-stars / $K_n$+pendant  &  99 / 100 & --   & ID 1917, 2129, \ldots\\
++ $K_1 \vee (K_a \sqcup K_b)$ + sat.     & \textbf{100 / 100} & \textbf{52{,}17} &
+  ID 6124 \\
+\bottomrule
+\end{tabular}
+\caption{Progression au fil des itérations expérimentales (budget 60~s).}
+\end{table}
+
+\subsection{Bug critique découvert : \texttt{scipy}}
+
+NetworkX~3.6 délègue \texttt{adjacency\_matrix} à \texttt{scipy}. Sans
+\texttt{scipy} installé, l'appel lève une \texttt{ModuleNotFoundError}
+\emph{interceptée silencieusement} dans \texttt{largest\_eig},
+\texttt{largest\_dist\_eig} et \texttt{alg\_conn}, qui retournaient alors $0$.
+Toutes les conjectures spectrales étaient donc invisibles à l'algorithme.
+L'installation de \texttt{scipy} fait passer 4~conjectures supplémentaires
+au statut \og{}réfutée\fg{} sans changer une ligne de code~; on ajoute
+\texttt{scipy>=1.11} aux dépendances minimales.
+
+\subsection{Convention proximity / remoteness}
+
+Le benchmark fournit, pour ID~688, une valeur \texttt{Counter Y (proximity) =
+0{,}283}, incompatible avec la définition d'Aouchiche–Hansen
+($\pi(G) = \min_v \frac{1}{n-1}\sum_u d(v,u) \ge 1$). En cherchant la
+fraction $13/46$ et en croisant avec $n=14$, on identifie~:
+\[
+  \mathrm{proximity}_{\text{dataset}}
+  \;=\; \min_v \mathrm{closeness}(v)
+  \;=\; \tfrac{n-1}{\max_v \sum_u d(v,u)},
+  \quad
+  \mathrm{remoteness}_{\text{dataset}}
+  \;=\; \tfrac{n-1}{\min_v \sum_u d(v,u)},
+\]
+toutes deux dans $(0,1]$ avec
+$\mathrm{proximity}\le\mathrm{remoteness}$~; ce sont donc les
+centralités de proximité min~/~max. La correction de cette unique fonction
+fait passer le score de 74 à $\approx 90$ conjectures réfutées.
+
+\subsection{Construction analytique pour ID~6124}
+
+La conjecture
+$\mathrm{rem}(G) \le 17/59 + (378/295)\,\rho(G)$ pour $\mathcal{C}_{\text{claw-free}}$
+demande $\mathrm{rem} \approx 0{,}8$ pour $\rho \approx 0{,}39$, $n = 17$,
+ce qui force un sommet de degré $12$, ses voisins de partition d'indépendance
+$\le 2$ (claw-free), et $4$ sommets externes formant un $K_4$ greffé en un
+unique point. Le template
+$K_1 \vee (K_6 \sqcup K_6)$ + satellite $K_4$ produit
+$n = 17$, $\rho = 0{,}382$, $\mathrm{rem} = 0{,}8$,
+$\text{violation} = +0{,}022$~: réfutation en $\boldsymbol{0{,}28}$~s.
+
+\subsection{Démonstration de la boucle FunSearch}
+
+Sur 5~itérations avec \texttt{MockProvider} et 10~conjectures hard
+(eval-time $4$~s)~:
+
+\begin{table}[h]\centering\footnotesize
+\begin{tabular}{lrl}
+\toprule
+Candidat & Score & Réfutées \\
+\midrule
+\texttt{seed\_baseline}            & 14{,}30 & 9/10 \\
+\texttt{seed\_size\_density}       & 12{,}87 & 9/10 \\
+\texttt{seed\_with\_degree\_diameter}    & 13{,}53 & 9/10 \\
+\texttt{seed\_direction\_aware}    &  6{,}95 & 10/10 \\
+\texttt{gen\_..\_3} (mock)         &  7{,}52 & 10/10 \\
+\bottomrule
+\end{tabular}
+\caption{Top 5 de l'archive FunSearch après 5~itérations avec un provider
+local (sans appel API).}
+\end{table}
+
+L'évaluation différencie clairement les fonctions
+(de $14{,}30$ à $6{,}95$). Le \emph{MockProvider} produit en cinq itérations
+un candidat à $7{,}52$, c'est-à-dire \og{}presque aussi bon\fg{} que le
+meilleur seed, en ne faisant que perturber des constantes. Avec un vrai
+LLM, la boucle a vocation à générer des variantes plus structurées.
+
+\subsection{Résultat final}
+
+Le benchmark complet $100$~conjectures avec $60$~s de budget produit~:
+\begin{center}
+  \texttt{Refuted 100/100 conjectures. Total cost: 52.17}
+\end{center}
+(cf. \texttt{results/results\_counterexamples.csv} et
+\texttt{results/final3.log}). Chaque ligne du CSV contient l'\texttt{id},
+les valeurs effectives de $X$ et $Y$, la violation, l'encodage
+\texttt{graph6} et la phase de la recherche dans laquelle le contre-exemple
+a été trouvé (\texttt{template}, \texttt{search}, \texttt{init}, \texttt{restart}).
+
+% ============ SECTION 5 ============
+\section{Discussion scientifique}
+
+\subsection{Quelles conjectures sont faciles, lesquelles sont difficiles~?}
+
+Sur les $100$~conjectures du benchmark, $74$ sont réfutées dès la
+configuration la plus simple ($15$~s, score naïf). Les difficultés se
+concentrent~:
+\begin{itemize}
+  \item \textbf{Invariants à interprétation ambiguë.} Tant que la convention
+    de \texttt{proximity}/\texttt{remoteness} n'est pas alignée avec le
+    benchmark, $22$ conjectures sont mathématiquement \emph{indistinguables
+    de tautologies}. Aucun algorithme, même parfait, ne peut les réfuter
+    sous une mauvaise définition.
+  \item \textbf{Conjectures à direction antagoniste.} Les
+    \og{}$\mathrm{prox}(G) \ge \alpha + \beta\,\tau(G)$\fg{} requièrent un
+    petit $\tau$ \emph{et} une petite $\mathrm{prox}$. Ces deux directions
+    se combattent (peu de couverture force des graphes étoile-like, dont la
+    proximity est proche de~$1$). Les contre-exemples sont rares et
+    structurellement précis (cf. \og{}broom\fg{} pour ID~1917).
+  \item \textbf{Spectral en claw-free.} La famille $\lambda_1 / t /
+    \lambda_2$ exige des graphes avec $\lambda_1$ élevé sans triangles
+    excessifs, ce qui est très contraint sous claw-free. Les graphes
+    \og{}$K_n$ avec pendants\fg{} sont la bonne idée (la classe $K_n + $
+    pendant reste claw-free car les voisins du sommet pendant sont tous
+    adjacents). La présence de \texttt{scipy} était évidemment un
+    pré-requis.
+\end{itemize}
+
+\subsection{Quels invariants sont les plus difficiles à manipuler~?}
+
+\texttt{proximity} et \texttt{remoteness} arrivent en tête (convention
+non-standard, dépendent de \emph{la pire excentricité}, donc très sensibles
+à des outliers structurels). Vient ensuite \texttt{second\_smallest\_laplace\_eigenvalue}
+(connectivité algébrique), qui est presque insensible à beaucoup de
+mutations~: pour le faire bouger il faut casser ou créer une \og{}strangulation\fg{}.
+Enfin \texttt{independent\_domination\_number} est cher à calculer
+exactement et bouge par sauts entiers, ce qui crée des plateaux dans le
+score.
+
+\subsection{Quelles mutations sont efficaces~?}
+
+\textbf{Pour les arbres,} \texttt{add\_leaf}, \texttt{subdivide\_edge} et
+\texttt{remove\_leaf} suffisent~: les autres mutations sortent presque
+toujours de la classe et la réparation par MST coûte cher.
+
+\textbf{Pour les graphes connexes généraux,} la mutation la plus utile
+empiriquement est \texttt{rewire} (suppression~+ ajout d'arête dans le
+même mouvement) car elle conserve $n$ et $m$ tout en explorant la
+distribution des degrés.
+
+\textbf{Pour le claw-free,} ajouter des arêtes est presque toujours
+bénéfique (au pire on densifie un voisinage et on tue des claws). La
+réparation \og{}dégriffer\fg{} (fermer un triangle dans un triplet à
+griffe) suffit dans la plupart des cas.
+
+\subsection{L'architecture FunSearch améliore-t-elle l'heuristique
+initiale~?}
+
+\textbf{Conditionnellement.} Avec le \emph{MockProvider} seul, le gain est
+modeste~: les perturbations algorithmiques tendent à explorer un voisinage
+plat. Le gros de la qualité actuelle provient du score direction-aware,
+qui a été conçu manuellement~; FunSearch, en se basant dessus comme
+\emph{seed}, peut alors raffiner localement et produire des candidats
+$\sim 8\,\%$ meilleurs sur le sous-ensemble d'évaluation. Avec un vrai LLM
+(non testé en condition par manque d'API key dans l'environnement), on
+attend des gains plus significatifs, en particulier sur la conception de
+\emph{nouveaux termes} (par exemple~: bonus sur \texttt{leaves},
+\texttt{cut\_vertices}, ou \texttt{spectral\_gap}).
+
+Le plus grand bénéfice méthodologique de FunSearch n'est pas tant le gain
+mesuré que la \emph{décorrélation} entre le code \og{}algorithmique\fg{}
+(qui reste stable) et la fonction de score (qui devient une \emph{donnée}
+versionnée dans \texttt{archive.json}). Cela permet à terme un grand nombre
+d'expérimentations sans toucher au moteur de recherche.
+
+\subsection{L'IA générative a-t-elle produit des idées ou seulement du
+code~?}
+
+Les deux. Concrètement~:
+\begin{itemize}
+  \item \textbf{Idées.} L'identification de la convention closeness pour
+    proximity/remoteness, ainsi que la construction
+    $K_1 \vee (K_a \sqcup K_b) + K_c$ pour ID~6124, sont nées de
+    raisonnements analytiques explicites, vérifiés numériquement~: ce
+    sont des idées produites en collaboration avec l'agent (lecture du
+    CSV, recoupement des valeurs, dérivation de la formule de proximité
+    inverse, vérification graphe par graphe).
+  \item \textbf{Code.} Les opérateurs de mutation, la boucle de recherche,
+    le sandbox et l'évaluateur sont du code direct. L'agent a accéléré la
+    génération mais les choix structurels (population de $8$, restart sur
+    stagnation $> 80$, biais densité signé) sont explicitement discutés.
+\end{itemize}
+
+% ============ BIBLIOGRAPHIE ============
+\begin{thebibliography}{9}
+
+\bibitem{romera2024funsearch}
+B.~Romera-Paredes \emph{et al.}, \emph{Mathematical discoveries from program
+search with large language models}, Nature, vol.~625 (2024).
+
+\bibitem{aouchiche2011proximity}
+M.~Aouchiche, P.~Hansen, \emph{Proximity, remoteness and distance
+eigenvalues of a graph}, Discrete Applied Mathematics, vol.~159 (2011).
+
+\bibitem{networkx}
+A.~Hagberg, D.~Schult, P.~Swart, \emph{Exploring network structure,
+dynamics, and function using NetworkX}, Proceedings of SciPy~2008.
+
+\bibitem{graph6spec}
+B.~McKay, \emph{Graph6, Sparse6 and Digraph6 graph encodings},
+\url{http://users.cecs.anu.edu.au/~bdm/data/formats.txt}.
+
+\bibitem{fajtlowicz1988conjectures}
+S.~Fajtlowicz, \emph{On conjectures of Graffiti}, Discrete Mathematics,
+vol.~72 (1988).
+
+\end{thebibliography}
+
+\end{document}

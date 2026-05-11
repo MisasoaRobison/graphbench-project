@@ -1,232 +1,336 @@
+import math
 import networkx as nx
+import numpy as np
 
-# ----------------------------------------------------------------------
-# Calculs exacts pour n <= 30
-# ----------------------------------------------------------------------
+CACHE = {}
 
-def exact_domination(G):
-    nodes = list(G.nodes)
-    n = len(nodes)
-    order = sorted(nodes, key=lambda v: G.degree(v), reverse=True)
-    best = n
 
-    def is_dominating(S):
-        dominated = set()
-        for v in S:
-            dominated.add(v)
-            dominated.update(G.neighbors(v))
-        return len(dominated) == n
+def cache_key(G):
+    H = nx.convert_node_labels_to_integers(G)
+    try:
+        return nx.to_graph6_bytes(H, header=False).decode().strip()
+    except Exception:
+        return None
 
-    def search(idx, current):
-        nonlocal best
-        if len(current) >= best:
+
+def clear_cache():
+    CACHE.clear()
+
+
+def neighbor_masks(G):
+    H = nx.convert_node_labels_to_integers(G)
+    n = H.number_of_nodes()
+    closed = [0] * n
+    opn = [0] * n
+    for v in range(n):
+        m = 0
+        for u in H.neighbors(v):
+            m |= (1 << u)
+        closed[v] = m | (1 << v)
+        opn[v] = m
+    return n, closed, opn
+
+
+def domination_bitmask(G):
+    n, closed, dummy = neighbor_masks(G)
+    if n == 0:
+        return 0
+    full = (1 << n) - 1
+    best = [n]
+
+    def srch(covered, depth):
+        if covered == full:
+            best[0] = min(best[0], depth); return
+        if depth + 1 >= best[0]:
             return
-        if idx == n:
-            if is_dominating(current):
-                best = len(current)
+        unc = full & ~covered
+        v = (unc & -unc).bit_length() - 1
+        cands = [u for u in range(n) if closed[u] & (1 << v)]
+        cands.sort(key=lambda u: bin(closed[u] & ~covered).count("1"), reverse=True)
+        for u in cands:
+            srch(covered | closed[u], depth + 1)
+
+    srch(0, 0)
+    return best[0]
+
+
+def total_domination_bitmask(G):
+    n, dummy, opn = neighbor_masks(G)
+    if n == 0:
+        return 0
+    if any(opn[v] == 0 for v in range(n)):
+        return n
+    full = (1 << n) - 1
+    best = [n]
+
+    def srch(covered, depth):
+        if covered == full:
+            best[0] = min(best[0], depth); return
+        if depth + 1 >= best[0]:
             return
-        search(idx + 1, current)
-        current.append(order[idx])
-        search(idx + 1, current)
-        current.pop()
+        unc = full & ~covered
+        v = (unc & -unc).bit_length() - 1
+        cands = [u for u in range(n) if opn[u] & (1 << v)]
+        cands.sort(key=lambda u: bin(opn[u] & ~covered).count("1"), reverse=True)
+        for u in cands:
+            srch(covered | opn[u], depth + 1)
 
-    search(0, [])
-    return best
+    srch(0, 0)
+    return best[0]
 
-def exact_total_domination(G):
-    nodes = list(G.nodes)
-    n = len(nodes)
-    best = n
 
-    def is_total_dominating(S):
-        dominated = set()
-        for v in S:
-            dominated.update(G.neighbors(v))
-        if len(dominated) < n:
-            return False
-        for v in S:
-            if not any(u in S for u in G.neighbors(v)):
-                return False
-        return True
-
-    def search(idx, current):
-        nonlocal best
-        if len(current) >= best:
-            return
-        if idx == n:
-            if is_total_dominating(current):
-                best = len(current)
-            return
-        search(idx + 1, current)
-        current.append(nodes[idx])
-        search(idx + 1, current)
-        current.pop()
-
-    search(0, [])
-    return best
-
-def exact_independent_domination(G):
-    nodes = list(G.nodes)
-    n = len(nodes)
-    best = n
-
-    def is_independent(S):
-        for i, u in enumerate(S):
-            for v in S[i + 1:]:
-                if G.has_edge(u, v):
-                    return False
-        return True
-
-    def is_dominating(S):
-        dominated = set(S)
-        for v in S:
-            dominated.update(G.neighbors(v))
-        return len(dominated) == n
-
-    def search(idx, current):
-        nonlocal best
-        if len(current) >= best:
-            return
-        if idx == n:
-            if is_independent(current) and is_dominating(current):
-                best = len(current)
-            return
-        search(idx + 1, current)
-        current.append(nodes[idx])
-        search(idx + 1, current)
-        current.pop()
-
-    search(0, [])
-    return best
-
-def exact_independent_set(G):
-    nodes = list(G.nodes)
-    n = len(nodes)
+def independence_number(G):
+    if G.number_of_nodes() == 0:
+        return 0
+    Gc = nx.complement(G)
     best = 0
-
-    def is_independent(S):
-        for i, u in enumerate(S):
-            for v in S[i + 1:]:
-                if G.has_edge(u, v):
-                    return False
-        return True
-
-    def search(idx, current):
-        nonlocal best
-        upper = len(current) + (n - idx)
-        if upper <= best:
-            return
-        if idx == n:
-            if is_independent(current):
-                best = max(best, len(current))
-            return
-        search(idx + 1, current)
-        current.append(nodes[idx])
-        search(idx + 1, current)
-        current.pop()
-
-    search(0, [])
+    for clique in nx.find_cliques(Gc):
+        if len(clique) > best:
+            best = len(clique)
     return best
 
-def exact_vertex_cover(G):
-    return G.number_of_nodes() - exact_independent_set(G)
 
-# ----------------------------------------------------------------------
-# Heuristiques pour grands graphes (n > 30)
-# ----------------------------------------------------------------------
+def independent_domination_bitmask(G):
+    n, closed, dummy = neighbor_masks(G)
+    if n == 0:
+        return 0
+    H = nx.convert_node_labels_to_integers(G)
+    adj = [set(H.neighbors(v)) for v in range(n)]
+    full = (1 << n) - 1
+    best = [n]
 
-def approx_domination(G):
-    nodes = list(G.nodes)
-    uncovered = set(nodes)
-    count = 0
-    while uncovered:
-        v = max(nodes, key=lambda x: len((set(G.neighbors(x)) | {x}) & uncovered))
-        uncovered -= (set(G.neighbors(v)) | {v})
-        count += 1
+    def srch(covered, chosen, depth):
+        if covered == full:
+            best[0] = min(best[0], depth); return
+        if depth + 1 >= best[0]:
+            return
+        unc = full & ~covered
+        v = (unc & -unc).bit_length() - 1
+        for u in range(n):
+            if not (closed[u] & (1 << v)):
+                continue
+            if any(u in adj[s] for s in chosen):
+                continue
+            chosen.append(u)
+            srch(covered | closed[u], chosen, depth + 1)
+            chosen.pop()
+
+    srch(0, [], 0)
+    return best[0]
+
+
+def greedy_dom(G):
+    H = nx.convert_node_labels_to_integers(G)
+    nodes = list(H.nodes())
+    unc = set(nodes); count = 0
+    while unc:
+        v = max(nodes, key=lambda x: len((set(H.neighbors(x)) | {x}) & unc))
+        unc -= (set(H.neighbors(v)) | {v}); count += 1
     return count
 
-def approx_total_domination(G):
-    nodes = list(G.nodes)
-    uncovered = set(nodes)
-    count = 0
-    while uncovered:
-        best = nodes[0]
-        best_gain = 0
-        for v in nodes:
-            gain = len(set(G.neighbors(v)) & uncovered)
-            if gain > best_gain:
-                best_gain = gain
-                best = v
-        uncovered -= set(G.neighbors(best))
-        count += 1
+
+def greedy_total_dom(G):
+    H = nx.convert_node_labels_to_integers(G)
+    nodes = list(H.nodes())
+    if any(H.degree(v) == 0 for v in nodes):
+        return len(nodes)
+    unc = set(nodes); count = 0
+    while unc:
+        v = max(nodes, key=lambda x: len(set(H.neighbors(x)) & unc))
+        unc -= set(H.neighbors(v)); count += 1
     return count
 
-def approx_independent_domination(G):
-    ind_set = nx.approximation.maximum_independent_set(G)
-    dominated = set(ind_set)
-    for v in ind_set:
-        dominated.update(G.neighbors(v))
-    missing = set(G.nodes) - dominated
-    return len(ind_set) + len(missing)   # simple ajout
 
-# ----------------------------------------------------------------------
-# Fonction principale
-# ----------------------------------------------------------------------
+def greedy_ind_dom(G):
+    H = nx.convert_node_labels_to_integers(G)
+    nodes = sorted(H.nodes(), key=lambda v: H.degree(v))
+    chosen = []; forbidden = set()
+    for v in nodes:
+        if v not in forbidden:
+            chosen.append(v); forbidden.add(v); forbidden.update(H.neighbors(v))
+    return len(chosen)
+
+
+def greedy_indep(G):
+    H = nx.convert_node_labels_to_integers(G)
+    nodes = sorted(H.nodes(), key=lambda v: H.degree(v))
+    chosen = []; forbidden = set()
+    for v in nodes:
+        if v not in forbidden:
+            chosen.append(v); forbidden.add(v); forbidden.update(H.neighbors(v))
+    return len(chosen)
+
+
+def largest_eig(G):
+    """Spectral radius (largest adjacency eigenvalue)."""
+    n = G.number_of_nodes()
+    if n == 0:
+        return 0.0
+    H = nx.convert_node_labels_to_integers(G)
+    try:
+        A = np.array(nx.adjacency_matrix(H).todense(), dtype=float)
+        eigs = np.linalg.eigvalsh(A)
+        return float(eigs[-1])
+    except Exception:
+        return 0.0
+
+
+def largest_dist_eig(G):
+    """Largest distance-matrix eigenvalue."""
+    if not nx.is_connected(G) or G.number_of_nodes() < 2:
+        return 0.0
+    H = nx.convert_node_labels_to_integers(G)
+    n = H.number_of_nodes()
+    try:
+        D = np.zeros((n, n), dtype=float)
+        sp = dict(nx.all_pairs_shortest_path_length(H))
+        for u in range(n):
+            for v in range(n):
+                D[u, v] = sp[u].get(v, 0)
+        eigs = np.linalg.eigvalsh(D)
+        return float(eigs[-1])
+    except Exception:
+        return 0.0
+
+
+def alg_conn(G):
+    """Second smallest Laplacian eigenvalue (algebraic connectivity)."""
+    if G.number_of_nodes() < 2:
+        return 0.0
+    if not nx.is_connected(G):
+        return 0.0
+    H = nx.convert_node_labels_to_integers(G)
+    n = H.number_of_nodes()
+    try:
+        L = np.array(nx.laplacian_matrix(H).todense(), dtype=float)
+        eigs = np.linalg.eigvalsh(L)
+        eigs.sort()
+        return float(eigs[1]) if len(eigs) >= 2 else 0.0
+    except Exception:
+        return 0.0
+
+
+def prox_rem(G):
+    """Dataset convention:
+       proximity  = min closeness centrality = (n-1) / max_v sum_u d(v,u)
+       remoteness = max closeness centrality = (n-1) / min_v sum_u d(v,u)
+    Both are in (0, 1] with proximity <= remoteness."""
+    if not nx.is_connected(G) or G.number_of_nodes() < 2:
+        return 0.0, 0.0
+    H = nx.convert_node_labels_to_integers(G)
+    n = H.number_of_nodes()
+    sp = dict(nx.all_pairs_shortest_path_length(H))
+    sums = [sum(sp[v].get(u, 0) for u in range(n)) for v in range(n)]
+    max_sum = max(sums); min_sum = min(sums)
+    proximity = (n - 1) / max_sum if max_sum > 0 else 0.0
+    remoteness = (n - 1) / min_sum if min_sum > 0 else 0.0
+    return proximity, remoteness
+
+
+def randic(G):
+    s = 0.0
+    for u, v in G.edges():
+        du, dv = G.degree(u), G.degree(v)
+        if du > 0 and dv > 0:
+            s += 1.0 / math.sqrt(du * dv)
+    return s
+
+
+def harmonic(G):
+    s = 0.0
+    for u, v in G.edges():
+        du, dv = G.degree(u), G.degree(v)
+        if du + dv > 0:
+            s += 2.0 / (du + dv)
+    return s
+
+
+def z1(G):
+    return sum(d * d for nodev, d in G.degree())
+
+
+def z2(G):
+    return sum(G.degree(u) * G.degree(v) for u, v in G.edges())
+
+
+EXACT_DOM = 22
+EXACT_IND = 26
+
 
 def compute_invariant(G, name):
-    # Invariants simples
-    if name == "n":
-        return G.number_of_nodes()
-    if name == "m":
-        return G.number_of_edges()
-    degrees = [d for _, d in G.degree()]
-    if name == "average_degree":
-        return sum(degrees) / len(degrees) if degrees else 0
+    key = cache_key(G)
+    if key is not None:
+        cached = CACHE.get((key, name))
+        if cached is not None:
+            return cached
+    val = compute_inner(G, name)
+    if key is not None:
+        CACHE[(key, name)] = val
+    return val
+
+
+def compute_inner(G, name):
+    n = G.number_of_nodes()
+    m = G.number_of_edges()
+    if name in ("order", "n"):
+        return n
+    if name in ("size", "m"):
+        return m
+    if name == "density":
+        return nx.density(G)
+    degs = [d for nodev, d in G.degree()]
     if name == "minimum_degree":
-        return min(degrees) if degrees else 0
+        return min(degs) if degs else 0
     if name == "maximum_degree":
-        return max(degrees) if degrees else 0
+        return max(degs) if degs else 0
+    if name == "average_degree":
+        return (sum(degs) / n) if n else 0.0
+    if name == "diameter":
+        if n < 2 or not nx.is_connected(G):
+            return n
+        return nx.diameter(G)
+    if name == "radius":
+        if n < 2 or not nx.is_connected(G):
+            return n
+        return nx.radius(G)
     if name == "triangle_number":
         return sum(nx.triangles(G).values()) // 3
     if name == "clique_number":
-        if G.number_of_nodes() <= 30:
-            # calcul exact
-            max_clique = 0
-            for clique in nx.find_cliques(G):
-                max_clique = max(max_clique, len(clique))
-            return max_clique
-        else:
-            # approximation pour les grands graphes
-            return len(nx.approximation.max_clique(G))
-    if name == "diameter":
-        return nx.diameter(G) if nx.is_connected(G) and G.number_of_nodes() > 1 else G.number_of_nodes()
-    if name == "radius":
-        return nx.radius(G) if nx.is_connected(G) and G.number_of_nodes() > 1 else G.number_of_nodes()
+        if n == 0:
+            return 0
+        best = 1
+        for c in nx.find_cliques(G):
+            if len(c) > best:
+                best = len(c)
+        return best
     if name == "matching_number":
         return len(nx.max_weight_matching(G, maxcardinality=True))
-
-    n = G.number_of_nodes()
-    if n <= 30:
-        if name == "domination_number":
-            return exact_domination(G)
-        if name == "total_domination_number":
-            return exact_total_domination(G)
-        if name == "independent_domination_number":
-            return exact_independent_domination(G)
-        if name == "vertex_cover_number":
-            return exact_vertex_cover(G)
-        if name == "independence_number":
-            return exact_independent_set(G)
-    else:
-        if name == "domination_number":
-            return approx_domination(G)
-        if name == "total_domination_number":
-            return approx_total_domination(G)
-        if name == "independent_domination_number":
-            return approx_independent_domination(G)
-        if name == "vertex_cover_number":
-            return len(nx.approximation.min_weighted_vertex_cover(G))
-        if name == "independence_number":
-            return len(nx.approximation.maximum_independent_set(G))
-
-    raise ValueError(f"Invariant non supporté : {name}")
+    if name == "domination_number":
+        return domination_bitmask(G) if n <= EXACT_DOM else greedy_dom(G)
+    if name == "total_domination_number":
+        return total_domination_bitmask(G) if n <= EXACT_DOM else greedy_total_dom(G)
+    if name == "independent_domination_number":
+        return independent_domination_bitmask(G) if n <= EXACT_DOM else greedy_ind_dom(G)
+    if name == "independence_number":
+        return independence_number(G) if n <= EXACT_IND else greedy_indep(G)
+    if name == "vertex_cover_number":
+        return n - (independence_number(G) if n <= EXACT_IND else greedy_indep(G))
+    if name == "randic_index":
+        return randic(G)
+    if name == "harmonic_index":
+        return harmonic(G)
+    if name == "first_zagreb_index":
+        return z1(G)
+    if name == "second_zagreb_index":
+        return z2(G)
+    if name == "proximity":
+        return prox_rem(G)[0]
+    if name == "remoteness":
+        return prox_rem(G)[1]
+    if name == "largest_eigenvalue":
+        return largest_eig(G)
+    if name == "largest_distance_eigenvalue":
+        return largest_dist_eig(G)
+    if name == "second_smallest_laplace_eigenvalue":
+        return alg_conn(G)
+    raise ValueError("Invariant non supporte: " + name)

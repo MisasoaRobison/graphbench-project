@@ -1,18 +1,14 @@
 import networkx as nx
 
+
+def relabel(G):
+    return nx.convert_node_labels_to_integers(G, first_label=0, ordering="default")
+
+
 def graph6(G):
-    return nx.to_graph6_bytes(G).decode().strip()
+    H = relabel(G)
+    return nx.to_graph6_bytes(H, header=False).decode().strip()
 
 
-def certificate(G, conjecture, compute_invariant):
-
-    x = compute_invariant(G, conjecture.x_invariant)
-    y = compute_invariant(G, conjecture.y_invariant)
-
-    return {
-        "n": G.number_of_nodes(),
-        "m": G.number_of_edges(),
-        "x": x,
-        "y": y,
-        "graph6": graph6(G)
-    }
+def from_graph6(s):
+    return nx.from_graph6_bytes(s.encode())

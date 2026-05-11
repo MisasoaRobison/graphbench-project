@@ -1,0 +1,127 @@
+{
+  "candidates": [
+    {
+      "id": "seed_baseline",
+      "source": "seed",
+      "code": "def heuristic_score(G, invariants, conjecture):\n    # The simplest possible score: just the raw violation.\n    return conjecture.violation(invariants)\n",
+      "score": 14.297748327255249,
+      "refuted": 9,
+      "total": 10,
+      "avg_time_refuted": 0.6997498141394721,
+      "errors": 0,
+      "failed_ids": [
+        7695
+      ],
+      "created_at": "2026-05-10 22:38:30"
+    },
+    {
+      "id": "seed_size_density",
+      "source": "seed",
+      "code": "def heuristic_score(G, invariants, conjecture):\n    v = conjecture.violation(invariants)\n    n = invariants.get(\"n\", 0)\n    m = invariants.get(\"m\", 0)\n    density = 2 * m / (n * (n - 1)) if n > 1 else 0.0\n    score = 10.0 * v\n    score += 0.05 * n\n    score -= 0.2 * abs(density - 0.5)\n    return score\n",
+      "score": 12.870271444320679,
+      "refuted": 9,
+      "total": 10,
+      "avg_time_refuted": 0.5411412715911865,
+      "errors": 0,
+      "failed_ids": [
+        7695
+      ],
+      "created_at": "2026-05-10 22:38:39"
+    },
+    {
+      "id": "seed_with_degree_diameter",
+      "source": "seed",
+      "code": "def heuristic_score(G, invariants, conjecture):\n    v = conjecture.violation(invariants)\n    n = invariants.get(\"n\", 0)\n    m = invariants.get(\"m\", 0)\n    Delta = invariants.get(\"Delta\", 0)\n    diam = invariants.get(\"diam\", 0)\n    triangles = invariants.get(\"triangles\", 0)\n    density = 2 * m / (n * (n - 1)) if n > 1 else 0.0\n    return (\n        10.0 * v\n        + 0.3 * diam\n        + 0.2 * Delta\n        + 0.1 * triangles\n        - 0.05 * n\n        - 0.2 * abs(density - 0.5)\n    )\n",
+      "score": 13.530645608901978,
+      "refuted": 9,
+      "total": 10,
+      "avg_time_refuted": 0.6145161787668864,
+      "errors": 0,
+      "failed_ids": [
+        7695
+      ],
+      "created_at": "2026-05-10 22:38:48"
+    },
+    {
+      "id": "seed_direction_aware",
+      "source": "seed",
+      "code": "def heuristic_score(G, invariants, conjecture):\n    v = conjecture.violation(invariants)\n    if v > 1e-9:\n        return 1e6 + v\n    n = invariants.get(\"n\", 0)\n    m = invariants.get(\"m\", 0)\n    if n <= 1:\n        return v - 100\n    density = 2 * m / (n * (n - 1))\n    # Direction we want each invariant to move in order to violate.\n    # For Y: <= -> bigger, >= -> smaller. For X: depends on polynomial slope.\n    y_dir = 1 if conjecture.sign == \"<=\" else -1\n    try:\n        x_val = invariants.get(conjecture.x_invariant, 0.0)\n        slope = (conjecture.polynomial(x_val + 1e-3)\n                 - conjecture.polynomial(x_val - 1e-3)) / 2e-3\n    except Exception:\n        slope = 0.0\n    if conjecture.sign == \"<=\":\n        x_dir = -1 if slope > 0 else (1 if slope < 0 else 0)\n    else:\n        x_dir = 1 if slope > 0 else (-1 if slope < 0 else 0)\n\n    dens_bias = {\n        \"density\": 1, \"size\": 1, \"m\": 1,\n        \"minimum_degree\": 1, \"maximum_degree\": 1, \"average_degree\": 1,\n        \"clique_number\": 1, \"triangle_number\": 1,\n        \"first_zagreb_index\": 1, \"second_zagreb_index\": 1,\n        \"largest_eigenvalue\": 1, \"second_smallest_laplace_eigenvalue\": 1,\n        \"matching_number\": 0.5, \"vertex_cover_number\": 0.5,\n        \"diameter\": -1, \"radius\": -1,\n        \"proximity\": 1, \"remoteness\": 1,\n        \"largest_distance_eigenvalue\": -1,\n        \"independence_number\": -1,\n        \"domination_number\": -1, \"total_domination_number\": -1,\n        \"independent_domination_number\": -1,\n    }\n    score = v + 0.001 * n\n    target = (x_dir * dens_bias.get(conjecture.x_invariant, 0)\n              + y_dir * dens_bias.get(conjecture.y_invariant, 0))\n    if target > 0:\n        score += 0.5 * (density - 0.5)\n        if density > 0.9: score += 1.0\n    elif target < 0:\n        score += 0.5 * (0.5 - density)\n        if density < 0.1: score += 1.0\n    return score\n",
+      "score": 6.9471354484558105,
+      "refuted": 10,
+      "total": 10,
+      "avg_time_refuted": 0.694713544845581,
+      "errors": 0,
+      "failed_ids": [],
+      "created_at": "2026-05-10 22:38:55"
+    },
+    {
+      "id": "gen_1778445535_0",
+      "source": "MockProvider",
+      "code": "def heuristic_score(G, invariants, conjecture):\n    v = conjecture.violation(invariants)\n    if v > 1e-14:\n        return 1e6 + v\n    n = invariants.get(\"n\", 0)\n    m = invariants.get(\"m\", 0)\n    if n <= 1:\n        return v - 102\n    density = 2 * m / (n * (n - 1))\n    # Direction we want each invariant to move in order to violate.\n    # For Y: <= -> bigger, >= -> smaller. For X: depends on polynomial slope.\n    y_dir = 1 if conjecture.sign == \"<=\" else -1\n    try:\n        x_val = invariants.get(conjecture.x_invariant, 0.0000)\n        slope = (conjecture.polynomial(x_val + 1e-5)\n                 - conjecture.polynomial(x_val - 1e-3)) / 2e-2\n    except Exception:\n        slope = 0.0000\n    if conjecture.sign == \"<=\":\n        x_dir = -1 if slope > 0 else (2 if slope < 0 else 0)\n    else:\n        x_dir = 2 if slope > 0 else (-1 if slope < 0 else 0)\n\n    dens_bias = {\n        \"density\": 1, \"size\": 1, \"m\": 1,\n        \"minimum_degree\": 1, \"maximum_degree\": 2, \"average_degree\": 2,\n        \"clique_number\": 1, \"triangle_number\": 2,\n        \"first_zagreb_index\": 1, \"second_zagreb_index\": 2,\n        \"largest_eigenvalue\": 1, \"second_smallest_laplace_eigenvalue\": 1,\n        \"matching_number\": 0.6773, \"vertex_cover_number\": 0.4348,\n        \"diameter\": -2, \"radius\": -1,\n        \"proximity\": 1, \"remoteness\": 1,\n        \"largest_distance_eigenvalue\": -2,\n        \"independence_number\": -1,\n        \"domination_number\": -1, \"total_domination_number\": -2,\n        \"independent_domination_number\": -1,\n    }\n    score = v + 0.0011 * n\n    target = (x_dir * dens_bias.get(conjecture.x_invariant, 0)\n              + y_dir * dens_bias.get(conjecture.y_invariant, 0))\n    if target > 0:\n        score += 0.4653 * (density - 0.2801)\n        if density > 0.7019: score += 1.0110\n    elif target < 0:\n        score += 0.2913 * (0.5367 - density)\n        if density < 0.1330: score += 1.0677\n    return score",
+      "score": 13.515881776809692,
+      "refuted": 9,
+      "total": 10,
+      "avg_time_refuted": 0.6128757529788547,
+      "errors": 0,
+      "failed_ids": [
+        7695
+      ],
+      "created_at": "2026-05-10 22:39:05"
+    },
+    {
+      "id": "gen_1778445545_1",
+      "source": "MockProvider",
+      "code": "def heuristic_score(G, invariants, conjecture):\n    v = conjecture.violation(invariants)\n    if v > 1e-10:\n        return (1e6 + v) + 0.03 * invariants.get('n', 0)\n    n = invariants.get(\"n\", 0)\n    m = invariants.get(\"m\", 0)\n    if n <= 1:\n        return v - 93\n    density = 2 * m / (n * (n - 1))\n    # Direction we want each invariant to move in order to violate.\n    # For Y: <= -> bigger, >= -> smaller. For X: depends on polynomial slope.\n    y_dir = 1 if conjecture.sign == \"<=\" else -1\n    try:\n        x_val = invariants.get(conjecture.x_invariant, 0.0000)\n        slope = (conjecture.polynomial(x_val + 1e-2)\n                 - conjecture.polynomial(x_val - 1e-4)) / 2e-4\n    except Exception:\n        slope = 0.0000\n    if conjecture.sign == \"<=\":\n        x_dir = -1 if slope > 0 else (2 if slope < 0 else 0)\n    else:\n        x_dir = 2 if slope > 0 else (-1 if slope < 0 else 0)\n\n    dens_bias = {\n        \"density\": 1, \"size\": 2, \"m\": 2,\n        \"minimum_degree\": 2, \"maximum_degree\": 1, \"average_degree\": 2,\n        \"clique_number\": 1, \"triangle_number\": 1,\n        \"first_zagreb_index\": 1, \"second_zagreb_index\": 2,\n        \"largest_eigenvalue\": 2, \"second_smallest_laplace_eigenvalue\": 1,\n        \"matching_number\": 0.2808, \"vertex_cover_number\": 0.5843,\n        \"diameter\": -1, \"radius\": -1,\n        \"proximity\": 2, \"remoteness\": 1,\n        \"largest_distance_eigenvalue\": -1,\n        \"independence_number\": -1,\n        \"domination_number\": -1, \"total_domination_number\": -2,\n        \"independent_domination_number\": -1,\n    }\n    score = v + 0.0015 * n\n    target = (x_dir * dens_bias.get(conjecture.x_invariant, 0)\n              + y_dir * dens_bias.get(conjecture.y_invariant, 0))\n    if target > 0:\n        score += 0.2668 * (density - 0.5537)\n        if density > 1.5858: score += 1.0484\n    elif target < 0:\n        score += 0.2600 * (0.6025 - density)\n        if density < 0.1158: score += 1.1106\n    return score",
+      "score": 18.95060682296753,
+      "refuted": 8,
+      "total": 10,
+      "avg_time_refuted": 0.36882585287094116,
+      "errors": 0,
+      "failed_ids": [
+        7695,
+        980
+      ],
+      "created_at": "2026-05-10 22:39:16"
+    },
+    {
+      "id": "gen_1778445556_2",
+      "source": "MockProvider",
+      "code": "def heuristic_score(G, invariants, conjecture):\n    v = conjecture.violation(invariants)\n    if v > 1e-14:\n        return (1e6 + v) + -0.1 * invariants.get('gamma', 0)\n    n = invariants.get(\"n\", 0)\n    m = invariants.get(\"m\", 0)\n    if n <= 1:\n        return v - 192\n    density = 3 * m / (n * (n - 1))\n    # Direction we want each invariant to move in order to violate.\n    # For Y: <= -> bigger, >= -> smaller. For X: depends on polynomial slope.\n    y_dir = 1 if conjecture.sign == \"<=\" else -1\n    try:\n        x_val = invariants.get(conjecture.x_invariant, 0.0000)\n        slope = (conjecture.polynomial(x_val + 1e-3)\n                 - conjecture.polynomial(x_val - 1e-4)) / 2e-5\n    except Exception:\n        slope = 0.0000\n    if conjecture.sign == \"<=\":\n        x_dir = -1 if slope > 0 else (1 if slope < 0 else 0)\n    else:\n        x_dir = 1 if slope > 0 else (-1 if slope < 0 else 0)\n\n    dens_bias = {\n        \"density\": 1, \"size\": 2, \"m\": 1,\n        \"minimum_degree\": 1, \"maximum_degree\": 1, \"average_degree\": 1,\n        \"clique_number\": 1, \"triangle_number\": 1,\n        \"first_zagreb_index\": 1, \"second_zagreb_index\": 1,\n        \"largest_eigenvalue\": 1, \"second_smallest_laplace_eigenvalue\": 2,\n        \"matching_number\": 0.6285, \"vertex_cover_number\": 0.2552,\n        \"diameter\": -1, \"radius\": -2,\n        \"proximity\": 2, \"remoteness\": 2,\n        \"largest_distance_eigenvalue\": -1,\n        \"independence_number\": -1,\n        \"domination_number\": -1, \"total_domination_number\": -1,\n        \"independent_domination_number\": -1,\n    }\n    score = v + 0.0009 * n\n    target = (x_dir * dens_bias.get(conjecture.x_invariant, 0)\n              + y_dir * dens_bias.get(conjecture.y_invariant, 0))\n    if target > 0:\n        score += 0.3019 * (density - 0.7182)\n        if density > 0.8777: score += 1.1643\n    elif target < 0:\n        score += 0.5664 * (0.8593 - density)\n        if density < 0.1630: score += 0.6017\n    return score",
+      "score": 13.539263010025024,
+      "refuted": 9,
+      "total": 10,
+      "avg_time_refuted": 0.6154736677805582,
+      "errors": 0,
+      "failed_ids": [
+        7695
+      ],
+      "created_at": "2026-05-10 22:39:25"
+    },
+    {
+      "id": "gen_1778445565_3",
+      "source": "MockProvider",
+      "code": "def heuristic_score(G, invariants, conjecture):\n    v = conjecture.violation(invariants)\n    if v > 1e-8:\n        return 1e6 + v\n    n = invariants.get(\"n\", 0)\n    m = invariants.get(\"m\", 0)\n    if n <= 1:\n        return v - 80\n    density = 1 * m / (n * (n - 1))\n    # Direction we want each invariant to move in order to violate.\n    # For Y: <= -> bigger, >= -> smaller. For X: depends on polynomial slope.\n    y_dir = 1 if conjecture.sign == \"<=\" else -2\n    try:\n        x_val = invariants.get(conjecture.x_invariant, 0.0000)\n        slope = (conjecture.polynomial(x_val + 1e-3)\n                 - conjecture.polynomial(x_val - 1e-3)) / 2e-4\n    except Exception:\n        slope = 0.0000\n    if conjecture.sign == \"<=\":\n        x_dir = -1 if slope > 0 else (1 if slope < 0 else 0)\n    else:\n        x_dir = 1 if slope > 0 else (-1 if slope < 0 else 0)\n\n    dens_bias = {\n        \"density\": 1, \"size\": 1, \"m\": 1,\n        \"minimum_degree\": 2, \"maximum_degree\": 2, \"average_degree\": 2,\n        \"clique_number\": 1, \"triangle_number\": 2,\n        \"first_zagreb_index\": 1, \"second_zagreb_index\": 1,\n        \"largest_eigenvalue\": 1, \"second_smallest_laplace_eigenvalue\": 2,\n        \"matching_number\": 0.4366, \"vertex_cover_number\": 0.6399,\n        \"diameter\": -1, \"radius\": -1,\n        \"proximity\": 1, \"remoteness\": 1,\n        \"largest_distance_eigenvalue\": -2,\n        \"independence_number\": -1,\n        \"domination_number\": -1, \"total_domination_number\": -1,\n        \"independent_domination_number\": -1,\n    }\n    score = v + 0.0017 * n\n    target = (x_dir * dens_bias.get(conjecture.x_invariant, 0)\n              + y_dir * dens_bias.get(conjecture.y_invariant, 0))\n    if target > 0:\n        score += 0.8153 * (density - 0.4335)\n        if density > 0.5047: score += 0.7325\n    elif target < 0:\n        score += 0.7488 * (0.8237 - density)\n        if density < 0.0603: score += 1.0292\n    return score",
+      "score": 7.518091917037964,
+      "refuted": 10,
+      "total": 10,
+      "avg_time_refuted": 0.7518091917037963,
+      "errors": 0,
+      "failed_ids": [],
+      "created_at": "2026-05-10 22:39:33"
+    },
+    {
+      "id": "gen_1778445573_4",
+      "source": "MockProvider",
+      "code": "def heuristic_score(G, invariants, conjecture):\n    v = conjecture.violation(invariants)\n    if v > 1e-7:\n        return 1e6 + v\n    n = invariants.get(\"n\", 0)\n    m = invariants.get(\"m\", 0)\n    if n <= 1:\n        return v - 53\n    density = 3 * m / (n * (n - 1))\n    # Direction we want each invariant to move in order to violate.\n    # For Y: <= -> bigger, >= -> smaller. For X: depends on polynomial slope.\n    y_dir = 2 if conjecture.sign == \"<=\" else -2\n    try:\n        x_val = invariants.get(conjecture.x_invariant, 0.0000)\n        slope = (conjecture.polynomial(x_val + 1e-2)\n                 - conjecture.polynomial(x_val - 1e-4)) / 2e-4\n    except Exception:\n        slope = 0.0000\n    if conjecture.sign == \"<=\":\n        x_dir = -1 if slope > 0 else (1 if slope < 0 else 0)\n    else:\n        x_dir = 1 if slope > 0 else (-1 if slope < 0 else 0)\n\n    dens_bias = {\n        \"density\": 1, \"size\": 1, \"m\": 1,\n        \"minimum_degree\": 1, \"maximum_degree\": 1, \"average_degree\": 1,\n        \"clique_number\": 2, \"triangle_number\": 1,\n        \"first_zagreb_index\": 1, \"second_zagreb_index\": 1,\n        \"largest_eigenvalue\": 1, \"second_smallest_laplace_eigenvalue\": 1,\n        \"matching_number\": 0.3490, \"vertex_cover_number\": 0.2679,\n        \"diameter\": -1, \"radius\": -1,\n        \"proximity\": 1, \"remoteness\": 1,\n        \"largest_distance_eigenvalue\": -1,\n        \"independence_number\": -1,\n        \"domination_number\": -1, \"total_domination_number\": -2,\n        \"independent_domination_number\": -1,\n    }\n    score = v + 0.0016 * n\n    target = (x_dir * dens_bias.get(conjecture.x_invariant, 0)\n              + y_dir * dens_bias.get(conjecture.y_invariant, 0))\n    if target > 0:\n        score += 0.6588 * (density - 0.4517)\n        if density > 0.6845: score += 1.3831\n    elif target < 0:\n        score += 0.8929 * (0.5957 - density)\n        if density < 0.0842: score += 1.9264\n    return score",
+      "score": 12.615954160690308,
+      "refuted": 9,
+      "total": 10,
+      "avg_time_refuted": 0.5128837956322564,
+      "errors": 0,
+      "failed_ids": [
+        7695
+      ],
+      "created_at": "2026-05-10 22:39:41"
+    }
+  ]
+}
