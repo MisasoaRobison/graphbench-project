@@ -1,0 +1,33 @@
+=== FunSearch evolution start ===
+benchmark=benchmark/benchmark.csv  iterations=5  sub_size=4  budget=2.0s/conj  islands=2  prefer_llm=False
+Sub-benchmark: 4 conjectures, IDs=[1708, 7711, 4668, 2041]
+  seed #0: fitness=400.74  refuted=4/4  time=0.6s  |terms|=1
+  seed #1: fitness=400.75  refuted=4/4  time=0.5s  |terms|=5
+  seed #2: fitness=400.76  refuted=4/4  time=0.4s  |terms|=6
+  seed #3: fitness=400.77  refuted=4/4  time=0.3s  |terms|=6
+  seed #4: fitness=400.75  refuted=4/4  time=0.5s  |terms|=4
+
+--- Evolution loop ---
+[1/5] island=0 [KEPT] fitness=400.76  refuted=4/4  time=0.4s  |terms|=7
+[2/5] island=0 [KEPT] fitness=400.76  refuted=4/4  time=0.4s  |terms|=6
+[3/5] island=1 [ACCEPTED] fitness=400.77  refuted=4/4  time=0.3s  |terms|=6
+  -> migration: worst island re-seeded with best program
+  island 0: best fitness=400.770 refuted=4 time=0.3s |terms|=6
+  island 1: best fitness=400.770 refuted=4 time=0.3s |terms|=6
+[4/5] island=0 [KEPT] fitness=400.75  refuted=4/4  time=0.5s  |terms|=6
+[5/5] island=1 [KEPT] fitness=400.76  refuted=4/4  time=0.4s  |terms|=6
+
+=== Evolution done in 4.3s ===
+  island 0: best fitness=400.770 refuted=4 time=0.3s |terms|=6
+  island 1: best fitness=400.770 refuted=4 time=0.3s |terms|=6
+
+Best program: fitness=400.77  refuted=4/4  time=0.3s
+Terms:
+  - 0.0100 * size_penalty
+  + 0.0200 * n
+  + 0.0500 * Delta
+  + 0.1000 * leaves
+  + 0.3000 * xy_gap
+  + 1.0000 * violation
+
+Wrote evolved score to results/evolved_score.py

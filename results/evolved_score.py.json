@@ -1,0 +1,36 @@
+{
+  "best": {
+    "terms": [
+      [
+        -0.01,
+        "size_penalty"
+      ],
+      [
+        0.02,
+        "n"
+      ],
+      [
+        0.05,
+        "Delta"
+      ],
+      [
+        0.1,
+        "leaves"
+      ],
+      [
+        0.3,
+        "xy_gap"
+      ],
+      [
+        1.0,
+        "violation"
+      ]
+    ]
+  },
+  "fitness": 400.7698400259018,
+  "refuted": 4,
+  "elapsed": 0.30159974098205566,
+  "iterations": 5,
+  "sub_size": 4,
+  "time_per_conjecture": 2.0
+}

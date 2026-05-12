@@ -82,12 +82,21 @@ Options utiles :
 - `--limit N` : ne traite que les `N` premières conjectures.
 - `--ids "688,713"` : restreint à une liste d'IDs.
 - `--output ...` : `.csv` (séparateur `;`) ou `.xlsx`.
+- `--score evolved` ou `--score path/to/custom.py` : remplace
+  `src/scoring.heuristic_score` par une fonction FunSearch-évoluée
+  (cf. Partie 2 ci-dessous).
 
 Sortie : un CSV (ou xlsx) avec, par conjecture, `id`, `found`, `x_value`,
 `y_value`, `violation`, `nodes`, `edges`, `graph6`, `phase`, `evaluations`,
 `elapsed_s`.
 
 ## Pipeline FunSearch (Partie 2)
+
+Le dépôt fournit **deux implémentations indépendantes** de l'architecture
+FunSearch. Elles partagent le même principe (seed → sample → évaluer →
+garder top-K) mais explorent des choix techniques différents.
+
+### a) `experiments/funsearch/` — LLM-first
 
 Boucle qui demande à un LLM de proposer des `heuristic_score` et conserve les
 meilleurs sur un sous-ensemble d'évaluation :
@@ -109,6 +118,33 @@ python -m experiments.funsearch.funsearch --provider openai --iterations 20
 ```
 
 Détails dans [experiments/funsearch/README.md](experiments/funsearch/README.md).
+
+### b) `src/funsearch/` — Island model (symbolique pur)
+
+Boucle évolutive sans dépendance LLM. Un *programme* est une combinaison
+linéaire pondérée de 18 *features* calculés sur G et ses invariants ;
+4 îlots, migration périodique, mutation symbolique + crossover.
+
+```
+python run_funsearch.py                              # 40 iters, ~12 min
+python run_funsearch.py --hard                       # cible les conjectures dures
+python run_funsearch.py --ids 1566,1708,6574,6903    # IDs précis
+python run_funsearch.py --prefer-llm                 # ANTHROPIC_API_KEY requis
+```
+
+Sortie : `results/evolved_score.py` (conforme à la forme imposée §7.2),
+réutilisable via `python main.py --score evolved`.
+
+## Outils complémentaires
+
+```
+python validate.py [results.csv|.xlsx]           # validateur léger
+python experiments/compare.py FILE_A FILE_B       # comparaison baseline / évolué
+python build_report.py                            # report.md → report.html
+```
+
+Le pas-à-pas complet pour rejouer chaque expérience est dans
+[experiments/reproduce.md](experiments/reproduce.md).
 
 ## Conventions importantes
 

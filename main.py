@@ -1,4 +1,5 @@
 import argparse
+import importlib.util
 import os
 import sys
 import time
@@ -8,6 +9,20 @@ from src.parser import load_benchmark
 from src.invariants import compute_invariant, clear_cache
 from src.graph6 import graph6
 from src.search import search
+
+
+def load_evolved_score(path):
+    """Load a heuristic_score callable from an external Python file.
+
+    Used by ``--score <path>`` to plug a FunSearch-evolved scoring function
+    into the existing search pipeline (passed as ``score_fn=`` to search()).
+    """
+    spec = importlib.util.spec_from_file_location("evolved_score_module", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    if not hasattr(mod, "heuristic_score"):
+        raise AttributeError(f"{path} does not define heuristic_score")
+    return mod.heuristic_score
 
 
 def build_certificate(G, c):
@@ -35,7 +50,17 @@ def main():
     parser.add_argument("--time", type=float, default=60.0)
     parser.add_argument("--output", default="results/results_counterexamples.csv")
     parser.add_argument("--ids", type=str, default=None)
+    parser.add_argument("--score", default=None,
+                        help="Path to a FunSearch-evolved scoring file "
+                             "(or 'evolved' = results/evolved_score.py). "
+                             "When omitted, the built-in static heuristic is used.")
     args = parser.parse_args()
+
+    score_fn = None
+    if args.score:
+        path = "results/evolved_score.py" if args.score == "evolved" else args.score
+        log("Loading evolved score from " + path)
+        score_fn = load_evolved_score(path)
 
     log("Loading benchmark from " + args.benchmark + " ...")
     conjectures = load_benchmark(args.benchmark)
@@ -60,7 +85,7 @@ def main():
             + "  classes=" + str(c.graph_classes))
         clear_cache()
         t0 = time.time()
-        G, viol, info = search(c, time_limit=args.time)
+        G, viol, info = search(c, time_limit=args.time, score_fn=score_fn)
         elapsed = time.time() - t0
 
         if G is not None and viol > 1e-9:
